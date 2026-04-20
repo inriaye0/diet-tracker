@@ -246,8 +246,8 @@
 <script>
 const HABITS = [
   { id: 'nonsugar', name: '당류 줄이기',    color: '#1D9E75' },
-  { id: 'lactobacillus',    name: '유산균', color: '#378ADD' },
-  { id: 'stretching',  name: '맨몸/폼롤러 스트레칭',  color: '#BA7517' }
+  { id: 'lactobacillus',    name: '유산균', color: '#1D9E75' },
+  { id: 'stretching',  name: '맨몸/폼롤러 스트레칭',  color: '#1D9E75' }
 ];
 const TABS = ['tracker','habits','fasting','weight'];
 let cur = new Date(), state = {};
@@ -379,7 +379,7 @@ function renderFastGraph() {
   const goalDays = valid.filter(m => m >= 14*60).length;
 
   document.getElementById('fastStatRow').innerHTML = `
-    <div class="stat-card"><div class="stat-lbl">평균 공복 시간</div><div class="stat-val" style="color:#a33317;">${minsToLabel(avgMins)}</div></div>
+    <div class="stat-card"><div class="stat-lbl">평균 공복 시간</div><div class="stat-val" style="color:#222945;">${minsToLabel(avgMins)}</div></div>
     <div class="stat-card"><div class="stat-lbl">최장 공복 시간</div><div class="stat-val">${minsToLabel(maxMins)}</div></div>
     <div class="stat-card"><div class="stat-lbl">14시간 달성</div><div class="stat-val">${goalDays}일</div></div>
   `;
