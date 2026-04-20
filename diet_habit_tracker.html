@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>다이어트 해빗 트래커</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #ffffff; --bg2: #f5f5f3; --bg3: #eeecea;
+    --text: #1a1a1a; --text2: #6b6b6b; --text3: #aaaaaa;
+    --border: rgba(0,0,0,0.12); --border2: rgba(0,0,0,0.25);
+    --teal: #1D9E75; --teal-bg: #E1F5EE; --teal-dark: #085041;
+    --radius: 12px; --radius-sm: 8px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1e1e1e; --bg2: #2a2a2a; --bg3: #333333;
+      --text: #f0f0f0; --text2: #999999; --text3: #555555;
+      --border: rgba(255,255,255,0.1); --border2: rgba(255,255,255,0.22);
+      --teal-bg: #0a2e22; --teal-dark: #9FE1CB;
+    }
+  }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Pretendard', 'Apple SD Gothic Neo', sans-serif; background: var(--bg3); color: var(--text); min-height: 100vh; padding: 1.5rem; }
+  .tracker { max-width: 680px; margin: 0 auto; }
+  .tabs { display: flex; border: 0.5px solid var(--border); border-radius: var(--radius-sm); overflow: hidden; margin-bottom: 1.25rem; }
+  .tab { flex: 1; padding: 8px 6px; font-size: 12px; font-weight: 500; cursor: pointer; color: var(--text2); background: var(--bg2); text-align: center; line-height: 1.4; }
+  .tab.active { background: var(--bg); color: var(--text); }
+  .tab:not(:last-child) { border-right: 0.5px solid var(--border); }
+  .page { display: none; }
+  .page.active { display: block; }
+  .card { background: var(--bg); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 15px 16px; }
+  .sec { font-size: 11px; font-weight: 500; color: var(--text2); letter-spacing: 0.07em; text-transform: uppercase; margin-bottom: 10px; }
+  .date-bar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.25rem; }
+  .date-lbl { font-size: 20px; font-weight: 500; }
+  .nav-btn { background: var(--bg); border: 0.5px solid var(--border2); border-radius: var(--radius-sm); padding: 5px 13px; font-size: 13px; cursor: pointer; color: var(--text2); }
+  .nav-btn:hover { background: var(--bg2); }
+  .habits-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 1.25rem; }
+  .habit-card { background: var(--bg); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 13px 15px; display: flex; align-items: center; gap: 11px; cursor: pointer; user-select: none; transition: border-color 0.15s, background 0.15s; }
+  .habit-card:hover { border-color: var(--border2); }
+  .habit-card.done { border-color: var(--teal); background: var(--teal-bg); }
+  .chk { width: 22px; height: 22px; border-radius: 50%; border: 1.5px solid var(--border2); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .habit-card.done .chk { background: var(--teal); border-color: var(--teal); }
+  .tick { display: none; width: 9px; height: 6px; border-left: 2px solid #fff; border-bottom: 2px solid #fff; transform: rotate(-45deg) translate(1px, -1px); }
+  .habit-card.done .tick { display: block; }
+  .hname { font-size: 14px; font-weight: 500; }
+  .hsub { font-size: 11px; color: var(--text2); margin-top: 2px; }
+  .habit-card.done .hname { color: var(--teal-dark); }
+  .habit-card.done .hsub { color: var(--teal); }
+  .bottom-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .right-col { display: flex; flex-direction: column; gap: 8px; }
+  .meal-rows { display: flex; flex-direction: column; gap: 9px; }
+  .meal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; }
+  .field-lbl { font-size: 12px; color: var(--text2); }
+  .skip-btn { font-size: 11px; padding: 2px 8px; border-radius: 20px; border: 0.5px solid var(--border2); background: transparent; color: var(--text2); cursor: pointer; font-family: inherit; }
+  .skip-btn:hover { background: var(--bg2); }
+  .skip-btn.skipped { background: #FAEEDA; border-color: #BA7517; color: #633806; }
+  .meal-wrap.skipped textarea { opacity: 0.35; pointer-events: none; }
+  .tinput { width: 100%; border: 0.5px solid var(--border); border-radius: var(--radius-sm); padding: 7px 10px; font-size: 13px; background: var(--bg2); color: var(--text); font-family: inherit; }
+  .tinput::placeholder { color: var(--text2); opacity: 0.7; }
+  .tinput:focus { outline: none; border-color: var(--border2); }
+  textarea.tinput { resize: none; }
+  .time-row { display: flex; gap: 6px; align-items: center; }
+  .time-unit { font-size: 12px; color: var(--text2); }
+  .num-input { width: 64px; border: 0.5px solid var(--border); border-radius: var(--radius-sm); padding: 7px 8px; font-size: 13px; background: var(--bg2); color: var(--text); text-align: center; font-family: inherit; }
+  .num-input:focus { outline: none; border-color: var(--border2); }
+  .fast-time { width: 120px; border: 0.5px solid var(--border); border-radius: var(--radius-sm); padding: 7px 10px; font-size: 13px; background: var(--bg2); color: var(--text); font-family: inherit; }
+  .fast-time:focus { outline: none; border-color: var(--border2); }
+  .fast-result { margin-top: 10px; display: none; align-items: baseline; gap: 6px; }
+  .fast-result.show { display: flex; }
+  .fast-hours { font-size: 20px; font-weight: 500; color: var(--teal); }
+  .weight-row { display: flex; align-items: center; gap: 8px; }
+  .weight-num { width: 80px; font-size: 15px; }
+  .wk-note { font-size: 12px; color: var(--text2); margin-top: 8px; }
+  .save-btn { margin-top: 1.25rem; width: 100%; padding: 11px; background: var(--bg); border: 0.5px solid var(--border2); border-radius: var(--radius-sm); font-size: 14px; cursor: pointer; color: var(--text); font-family: inherit; }
+  .save-btn:hover { background: var(--bg2); }
+  .toast { display: block; margin: 10px auto 0; background: var(--teal); color: #fff; padding: 7px 20px; border-radius: 20px; font-size: 13px; opacity: 0; transition: opacity 0.3s; width: fit-content; }
+  .toast.show { opacity: 1; }
+  .graph-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; }
+  .graph-title { font-size: 20px; font-weight: 500; }
+  .range-btns { display: flex; border: 0.5px solid var(--border); border-radius: var(--radius-sm); overflow: hidden; }
+  .range-btn { padding: 5px 14px; font-size: 12px; cursor: pointer; color: var(--text2); background: var(--bg2); }
+  .range-btn.active { background: var(--bg); color: var(--text); font-weight: 500; }
+  .range-btn:not(:last-child) { border-right: 0.5px solid var(--border); }
+  .stat-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 1rem; }
+  .stat-card { background: var(--bg2); border-radius: var(--radius-sm); padding: 10px 12px; }
+  .stat-lbl { font-size: 11px; color: var(--text2); margin-bottom: 4px; }
+  .stat-val { font-size: 18px; font-weight: 500; }
+  .stat-val.up { color: #E24B4A; }
+  .stat-val.down { color: var(--teal); }
+  .no-data { text-align: center; padding: 3rem 0; font-size: 13px; color: var(--text2); line-height: 1.8; }
+  .bar-bg { height: 6px; background: var(--bg2); border-radius: 3px; overflow: hidden; margin-top: 5px; }
+  .bar-fill { height: 100%; border-radius: 3px; transition: width 0.4s; }
+  @media (max-width: 500px) {
+    .habits-grid, .bottom-grid { grid-template-columns: 1fr; }
+    body { padding: 1rem; }
+    .tab { font-size: 11px; padding: 7px 4px; }
+  }
+</style>
+</head>
+<body>
+<div class="tracker">
+  <div class="tabs">
+    <div class="tab active" onclick="switchTab('tracker')">기록</div>
+    <div class="tab" onclick="switchTab('habits')">습관 달성률</div>
+    <div class="tab" onclick="switchTab('fasting')">단식 기록</div>
+    <div class="tab" onclick="switchTab('weight')">몸무게</div>
+  </div>
+
+  <!-- 기록 탭 -->
+  <div id="page-tracker" class="page active">
+    <div class="date-bar">
+      <div class="date-lbl" id="dateLbl"></div>
+      <div style="display:flex;gap:6px;">
+        <button class="nav-btn" onclick="changeDay(-1)">◀ 이전</button>
+        <button class="nav-btn" onclick="changeDay(1)">다음 ▶</button>
+      </div>
+    </div>
+    <p class="sec">오늘의 습관</p>
+    <div class="habits-grid" id="habitsGrid"></div>
+    <div class="bottom-grid">
+      <div class="card">
+        <p class="sec">식단 기록</p>
+        <div class="meal-rows">
+          <div class="meal-wrap" id="wrap-breakfast">
+            <div class="meal-header"><span class="field-lbl">아침</span><button class="skip-btn" id="skip-breakfast" onclick="toggleSkip('breakfast')">건너뛰기</button></div>
+            <textarea class="tinput" id="m-breakfast" rows="2" placeholder="예: 오트밀, 계란 2개"></textarea>
+          </div>
+          <div class="meal-wrap" id="wrap-lunch">
+            <div class="meal-header"><span class="field-lbl">점심</span><button class="skip-btn" id="skip-lunch" onclick="toggleSkip('lunch')">건너뛰기</button></div>
+            <textarea class="tinput" id="m-lunch" rows="2" placeholder="예: 닭가슴살 샐러드"></textarea>
+          </div>
+          <div class="meal-wrap" id="wrap-dinner">
+            <div class="meal-header"><span class="field-lbl">저녁</span><button class="skip-btn" id="skip-dinner" onclick="toggleSkip('dinner')">건너뛰기</button></div>
+            <textarea class="tinput" id="m-dinner" rows="2" placeholder="예: 현미밥, 된장찌개"></textarea>
+          </div>
+          <div class="meal-wrap" id="wrap-snack">
+            <div class="meal-header"><span class="field-lbl">간식</span><button class="skip-btn" id="skip-snack" onclick="toggleSkip('snack')">건너뛰기</button></div>
+            <textarea class="tinput" id="m-snack" rows="1" placeholder="예: 그릭요거트"></textarea>
+          </div>
+        </div>
+      </div>
+      <div class="right-col">
+        <div class="card">
+          <p class="sec">운동 기록</p>
+          <div style="display:flex;flex-direction:column;gap:9px;">
+            <div><div class="field-lbl">운동 종류</div><input class="tinput" id="ex-type" type="text" placeholder="예: 런닝, 필라테스"></div>
+            <div>
+              <div class="field-lbl">운동 시간</div>
+              <div class="time-row">
+                <input class="num-input" id="ex-hour" type="number" min="0" max="23" placeholder="0">
+                <span class="time-unit">시간</span>
+                <input class="num-input" id="ex-min" type="number" min="0" max="59" placeholder="0">
+                <span class="time-unit">분</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <p class="sec">간헐적 단식</p>
+          <div style="display:flex;flex-direction:column;gap:9px;">
+            <div><div class="field-lbl">단식 시작</div><input class="fast-time" id="fast-start" type="time"></div>
+            <div><div class="field-lbl">단식 종료</div><input class="fast-time" id="fast-end" type="time"></div>
+          </div>
+          <div class="fast-result" id="fast-result">
+            <span class="fast-hours" id="fast-hours"></span>
+            <span class="time-unit" style="font-size:13px;">시간 공복</span>
+          </div>
+        </div>
+        <div class="card">
+          <p class="sec">몸무게 <span id="wk-badge" style="font-size:11px;font-weight:400;text-transform:none;letter-spacing:0;color:var(--text3);"></span></p>
+          <div class="weight-row">
+            <input class="num-input weight-num" id="weight-val" type="number" min="30" max="200" step="0.1" placeholder="00.0">
+            <span class="time-unit" style="font-size:13px;">kg</span>
+          </div>
+          <div class="wk-note" id="wk-note"></div>
+        </div>
+      </div>
+    </div>
+    <button class="save-btn" onclick="saveData()">저장하기</button>
+    <div class="toast" id="toast">저장됐어요!</div>
+  </div>
+
+  <!-- 습관 달성률 탭 -->
+  <div id="page-habits" class="page">
+    <div class="graph-header">
+      <div class="graph-title">습관 달성률</div>
+      <div class="range-btns">
+        <div class="range-btn active" onclick="setHabitRange(7,this)">7일</div>
+        <div class="range-btn" onclick="setHabitRange(14,this)">14일</div>
+        <div class="range-btn" onclick="setHabitRange(30,this)">30일</div>
+      </div>
+    </div>
+    <div class="stat-row" id="habitStatRow"></div>
+    <div class="card" style="padding:16px;margin-bottom:8px;">
+      <div style="position:relative;width:100%;height:220px;">
+        <canvas id="habitChart" role="img" aria-label="일별 습관 달성률 막대그래프"></canvas>
+      </div>
+    </div>
+    <div class="card" style="margin-top:8px;">
+      <p class="sec">습관별 달성률</p>
+      <div id="habitBreakdown" style="display:flex;flex-direction:column;gap:12px;"></div>
+    </div>
+  </div>
+
+  <!-- 단식 기록 탭 -->
+  <div id="page-fasting" class="page">
+    <div class="graph-header">
+      <div class="graph-title">단식 기록</div>
+      <div class="range-btns">
+        <div class="range-btn active" onclick="setFastRange(7,this)">7일</div>
+        <div class="range-btn" onclick="setFastRange(14,this)">14일</div>
+        <div class="range-btn" onclick="setFastRange(30,this)">30일</div>
+      </div>
+    </div>
+    <div class="stat-row" id="fastStatRow"></div>
+    <div class="card" style="padding:16px;" id="fastChartCard">
+      <div style="position:relative;width:100%;height:240px;">
+        <canvas id="fastChart" role="img" aria-label="일별 단식 시간 막대그래프"></canvas>
+      </div>
+    </div>
+    <div class="no-data" id="noFastData" style="display:none;">아직 기록된 단식이 없어요.<br>기록 탭에서 단식 시간을 입력해보세요!</div>
+  </div>
+
+  <!-- 몸무게 탭 -->
+  <div id="page-weight" class="page">
+    <div class="graph-header">
+      <div class="graph-title">몸무게 변화</div>
+      <div class="range-btns">
+        <div class="range-btn active" onclick="setWeightRange(4,this)">4주</div>
+        <div class="range-btn" onclick="setWeightRange(8,this)">8주</div>
+        <div class="range-btn" onclick="setWeightRange(12,this)">12주</div>
+      </div>
+    </div>
+    <div class="stat-row" id="weightStatRow"></div>
+    <div class="card" style="padding:16px;" id="weightChartCard">
+      <div style="position:relative;width:100%;height:220px;">
+        <canvas id="weightChart" role="img" aria-label="주차별 몸무게 꺾은선 그래프"></canvas>
+      </div>
+    </div>
+    <div class="no-data" id="noWeightData" style="display:none;">아직 기록된 몸무게가 없어요.<br>기록 탭에서 몸무게를 저장해보세요!</div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+const HABITS = [
+  { id: 'exercise', name: '운동하기',    color: '#1D9E75' },
+  { id: 'water',    name: '물 2L 마시기', color: '#378ADD' },
+  { id: 'nosugar',  name: '당류 줄이기',  color: '#BA7517' }
+];
+const TABS = ['tracker','habits','fasting','weight'];
+let cur = new Date(), state = {};
+let weightChart = null, habitChart = null, fastChart = null;
+let weightRangeWeeks = 4, habitRangeDays = 7, fastRangeDays = 7;
+
+function dk(d) { return d.toISOString().split('T')[0]; }
+function wk(d) { const j = new Date(d.getFullYear(),0,1); return Math.ceil(((d-j)/86400000+j.getDay()+1)/7); }
+function wkKey(d) { return 'wt_'+d.getFullYear()+'_w'+wk(d); }
+function fmt(d) { const D=['일','월','화','수','목','금','토']; return `${d.getFullYear()}년 ${d.getMonth()+1}월 ${d.getDate()}일 (${D[d.getDay()]})`; }
+function shortFmt(d) { const D=['일','월','화','수','목','금','토']; return `${d.getMonth()+1}/${d.getDate()}(${D[d.getDay()]})`; }
+
+function fastMins(fasting) {
+  if (!fasting || !fasting.start || !fasting.end) return 0;
+  const [sh,sm] = fasting.start.split(':').map(Number);
+  const [eh,em] = fasting.end.split(':').map(Number);
+  let sM = sh*60+sm, eM = eh*60+em;
+  if (eM <= sM) eM += 1440;
+  return eM - sM;
+}
+
+function minsToLabel(m) {
+  if (m === 0) return '-';
+  const h = Math.floor(m/60), min = m%60;
+  return min > 0 ? `${h}시간 ${min}분` : `${h}시간`;
+}
+
+function switchTab(t) {
+  document.querySelectorAll('.tab').forEach((el,i) => el.classList.toggle('active', TABS[i]===t));
+  document.querySelectorAll('.page').forEach(el => el.classList.remove('active'));
+  document.getElementById('page-'+t).classList.add('active');
+  if (t==='weight') renderWeightGraph();
+  if (t==='habits') renderHabitGraph();
+  if (t==='fasting') renderFastGraph();
+}
+
+function setWeightRange(w, el) {
+  weightRangeWeeks = w;
+  document.querySelectorAll('#page-weight .range-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active'); renderWeightGraph();
+}
+function setHabitRange(d, el) {
+  habitRangeDays = d;
+  document.querySelectorAll('#page-habits .range-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active'); renderHabitGraph();
+}
+function setFastRange(d, el) {
+  fastRangeDays = d;
+  document.querySelectorAll('#page-fasting .range-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active'); renderFastGraph();
+}
+
+function getDayData(days) {
+  const result = [], now = new Date();
+  for (let i = days-1; i >= 0; i--) {
+    const d = new Date(now); d.setDate(d.getDate()-i);
+    let saved = {};
+    try { saved = JSON.parse(localStorage.getItem('dht_'+dk(d))||'{}'); } catch(e) {}
+    result.push({ label: shortFmt(d), habits: saved.habits||{}, fasting: saved.fasting||{} });
+  }
+  return result;
+}
+
+function calcStreak(data) {
+  let max = 0, s = 0;
+  for (const d of [...data].reverse()) {
+    const done = HABITS.filter(h => d.habits[h.id]).length;
+    if (done === HABITS.length) { s++; max = Math.max(max, s); } else s = 0;
+  }
+  return max;
+}
+
+function renderHabitGraph() {
+  const data = getDayData(habitRangeDays);
+  const pcts = data.map(d => Math.round((HABITS.filter(h=>d.habits[h.id]).length / HABITS.length)*100));
+  const avg = Math.round(pcts.reduce((s,p)=>s+p,0)/pcts.length);
+  const perfect = pcts.filter(p=>p===100).length;
+  document.getElementById('habitStatRow').innerHTML = `
+    <div class="stat-card"><div class="stat-lbl">평균 달성률</div><div class="stat-val" style="color:#1D9E75;">${avg}%</div></div>
+    <div class="stat-card"><div class="stat-lbl">완벽한 날</div><div class="stat-val">${perfect}일</div></div>
+    <div class="stat-card"><div class="stat-lbl">최장 연속</div><div class="stat-val">${calcStreak(data)}일</div></div>
+  `;
+  document.getElementById('habitBreakdown').innerHTML = HABITS.map(h => {
+    const cnt = data.filter(d => d.habits[h.id]).length;
+    const pct = Math.round((cnt/data.length)*100);
+    return `<div>
+      <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:5px;">
+        <span style="font-weight:500;">${h.name}</span><span style="color:var(--text2);">${pct}%</span>
+      </div>
+      <div class="bar-bg"><div class="bar-fill" style="width:${pct}%;background:${h.color};"></div></div>
+    </div>`;
+  }).join('');
+  if (habitChart) habitChart.destroy();
+  habitChart = new Chart(document.getElementById('habitChart'), {
+    type: 'bar',
+    data: {
+      labels: data.map(d=>d.label),
+      datasets: [{ label:'달성률', data: pcts,
+        backgroundColor: pcts.map(p=>p===100?'#1D9E75':p>=66?'#5DCAA5':p>=33?'#9FE1CB':'#D3D1C7'),
+        borderRadius: 4, borderSkipped: false }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend:{display:false}, tooltip:{callbacks:{label:ctx=>`달성률: ${ctx.parsed.y}%`}} },
+      scales: {
+        x: { grid:{display:false}, ticks:{font:{size:10},color:'#888780',maxRotation:45,autoSkip:false,callback:function(val,i){ return habitRangeDays===30?'':this.getLabelForValue(val);}} },
+        y: { min:0, max:100, grid:{color:'rgba(128,128,128,0.1)'}, ticks:{font:{size:11},color:'#888780',callback:v=>v+'%'} }
+      }
+    }
+  });
+}
+
+function renderFastGraph() {
+  const data = getDayData(fastRangeDays);
+  const mins = data.map(d => fastMins(d.fasting));
+  const hours = mins.map(m => parseFloat((m/60).toFixed(2)));
+  const valid = mins.filter(m => m > 0);
+  const noDataEl = document.getElementById('noFastData');
+  const chartCard = document.getElementById('fastChartCard');
+
+  if (valid.length === 0) {
+    noDataEl.style.display = 'block'; chartCard.style.display = 'none';
+    document.getElementById('fastStatRow').innerHTML = ''; return;
+  }
+  noDataEl.style.display = 'none'; chartCard.style.display = 'block';
+
+  const avgMins = Math.round(valid.reduce((s,m)=>s+m,0) / valid.length);
+  const maxMins = Math.max(...valid);
+  const goalDays = valid.filter(m => m >= 16*60).length;
+
+  document.getElementById('fastStatRow').innerHTML = `
+    <div class="stat-card"><div class="stat-lbl">평균 공복</div><div class="stat-val" style="color:#534AB7;">${minsToLabel(avgMins)}</div></div>
+    <div class="stat-card"><div class="stat-lbl">최장 공복</div><div class="stat-val">${minsToLabel(maxMins)}</div></div>
+    <div class="stat-card"><div class="stat-lbl">16시간 달성</div><div class="stat-val">${goalDays}일</div></div>
+  `;
+
+  if (fastChart) fastChart.destroy();
+  fastChart = new Chart(document.getElementById('fastChart'), {
+    type: 'bar',
+    data: {
+      labels: data.map(d=>d.label),
+      datasets: [
+        {
+          label: '공복 시간',
+          data: hours,
+          backgroundColor: hours.map(h => h >= 16 ? '#7F77DD' : h >= 12 ? '#AFA9EC' : h > 0 ? '#CECBF6' : 'transparent'),
+          borderRadius: 4,
+          borderSkipped: false
+        },
+        {
+          label: '16시간 목표',
+          data: Array(data.length).fill(16),
+          type: 'line',
+          borderColor: '#534AB7',
+          borderWidth: 1.5,
+          borderDash: [4, 3],
+          pointRadius: 0,
+          fill: false,
+          tension: 0
+        }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: ctx => {
+              if (ctx.datasetIndex === 1) return '목표: 16시간';
+              const m = mins[ctx.dataIndex];
+              return m > 0 ? `공복: ${minsToLabel(m)}` : '기록 없음';
+            }
+          }
+        }
+      },
+      scales: {
+        x: { grid:{display:false}, ticks:{font:{size:10},color:'#888780',maxRotation:45,autoSkip:false,callback:function(val,i){ return fastRangeDays===30?'':this.getLabelForValue(val);}} },
+        y: { min:0, suggestedMax:24, grid:{color:'rgba(128,128,128,0.1)'}, ticks:{font:{size:11},color:'#888780',callback:v=>v+'h'} }
+      }
+    }
+  });
+}
+
+function getWeightData(weeks) {
+  const data = [], now = new Date();
+  for (let i = weeks-1; i >= 0; i--) {
+    const d = new Date(now); d.setDate(d.getDate()-i*7);
+    const val = localStorage.getItem(wkKey(d));
+    data.push({ label:`${d.getMonth()+1}월 ${wk(d)}주`, val: val?parseFloat(parseFloat(val).toFixed(1)):null });
+  }
+  return data;
+}
+
+function renderWeightGraph() {
+  const data = getWeightData(weightRangeWeeks);
+  const valid = data.filter(d=>d.val!==null);
+  const noDataEl = document.getElementById('noWeightData');
+  const chartCard = document.getElementById('weightChartCard');
+  if (valid.length===0) { noDataEl.style.display='block'; chartCard.style.display='none'; document.getElementById('weightStatRow').innerHTML=''; return; }
+  noDataEl.style.display='none'; chartCard.style.display='block';
+  const first=valid[0].val, last=valid[valid.length-1].val;
+  const diff = parseFloat((last-first).toFixed(1));
+  const minV = Math.min(...valid.map(d=>d.val)), maxV = Math.max(...valid.map(d=>d.val));
+  document.getElementById('weightStatRow').innerHTML = `
+    <div class="stat-card"><div class="stat-lbl">현재</div><div class="stat-val">${last}kg</div></div>
+    <div class="stat-card"><div class="stat-lbl">변화량</div><div class="stat-val ${diff<0?'down':diff>0?'up':''}">${diff===0?'-':(diff>0?'+':'')+diff+'kg'}</div></div>
+    <div class="stat-card"><div class="stat-lbl">최저 / 최고</div><div class="stat-val" style="font-size:14px;">${minV} / ${maxV}</div></div>
+  `;
+  if (weightChart) weightChart.destroy();
+  weightChart = new Chart(document.getElementById('weightChart'), {
+    type:'line',
+    data:{ labels:data.map(d=>d.label), datasets:[{label:'몸무게',data:data.map(d=>d.val),borderColor:'#1D9E75',backgroundColor:'rgba(29,158,117,0.08)',borderWidth:2,pointBackgroundColor:'#1D9E75',pointBorderColor:'#fff',pointBorderWidth:2,pointRadius:5,pointHoverRadius:6,tension:0.35,fill:true,spanGaps:true}] },
+    options:{ responsive:true, maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>ctx.parsed.y!==null?ctx.parsed.y+'kg':''}}},
+      scales:{
+        x:{grid:{color:'rgba(128,128,128,0.1)'},ticks:{font:{size:11},color:'#888780',maxRotation:30}},
+        y:{min:minV-0.5,max:maxV+0.5,grid:{color:'rgba(128,128,128,0.1)'},ticks:{font:{size:11},color:'#888780',callback:v=>v+'kg'}}
+      }
+    }
+  });
+}
+
+function calcFasting() {
+  const s = document.getElementById('fast-start').value;
+  const e = document.getElementById('fast-end').value;
+  const res = document.getElementById('fast-result');
+  if (!s||!e) { res.classList.remove('show'); return; }
+  const [sh,sm] = s.split(':').map(Number), [eh,em] = e.split(':').map(Number);
+  let sM = sh*60+sm, eM = eh*60+em;
+  if (eM <= sM) eM += 1440;
+  const diff = eM-sM, h = Math.floor(diff/60), m = diff%60;
+  document.getElementById('fast-hours').textContent = m>0?`${h}시간 ${m}분`:`${h}시간`;
+  res.classList.add('show');
+}
+
+function load() {
+  try { const s=JSON.parse(localStorage.getItem('dht_'+dk(cur))||'{}'); state={habits:s.habits||{},meals:s.meals||{},exercise:s.exercise||{},fasting:s.fasting||{}}; }
+  catch(e) { state={habits:{},meals:{},exercise:{},fasting:{}}; }
+}
+
+function saveData() {
+  state.meals={breakfast:document.getElementById('m-breakfast').value,lunch:document.getElementById('m-lunch').value,dinner:document.getElementById('m-dinner').value,snack:document.getElementById('m-snack').value,skipped:state.meals.skipped||{}};
+  state.exercise={type:document.getElementById('ex-type').value,hour:document.getElementById('ex-hour').value,min:document.getElementById('ex-min').value};
+  state.fasting={start:document.getElementById('fast-start').value,end:document.getElementById('fast-end').value};
+  try { localStorage.setItem('dht_'+dk(cur),JSON.stringify(state)); } catch(e) {}
+  const wv=document.getElementById('weight-val').value;
+  if(wv) { try { localStorage.setItem(wkKey(cur),wv); } catch(e) {} }
+  const t=document.getElementById('toast');
+  t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2000);
+}
+
+function toggleHabit(id) { state.habits[id]=!state.habits[id]; saveData(); render(); }
+
+function render() {
+  document.getElementById('dateLbl').textContent=fmt(cur);
+  document.getElementById('habitsGrid').innerHTML=HABITS.map(h=>`
+    <div class="habit-card ${state.habits[h.id]?'done':''}" onclick="toggleHabit('${h.id}')">
+      <div class="chk"><div class="tick"></div></div>
+      <div><div class="hname">${h.name}</div>${state.habits[h.id]?'<div class="hsub">달성!</div>':''}</div>
+    </div>`).join('');
+  document.getElementById('m-breakfast').value=state.meals.breakfast||'';
+  document.getElementById('m-lunch').value=state.meals.lunch||'';
+  document.getElementById('m-dinner').value=state.meals.dinner||'';
+  document.getElementById('m-snack').value=state.meals.snack||'';
+  ['breakfast','lunch','dinner','snack'].forEach(m => applySkip(m, !!(state.meals.skipped||{})[m]));
+  document.getElementById('ex-type').value=state.exercise.type||'';
+  document.getElementById('ex-hour').value=state.exercise.hour||'';
+  document.getElementById('ex-min').value=state.exercise.min||'';
+  document.getElementById('fast-start').value=state.fasting.start||'';
+  document.getElementById('fast-end').value=state.fasting.end||'';
+  calcFasting();
+  const savedW=localStorage.getItem(wkKey(cur));
+  document.getElementById('weight-val').value=savedW||'';
+  document.getElementById('wk-badge').textContent=`${cur.getFullYear()}년 ${wk(cur)}주차`;
+  document.getElementById('wk-note').textContent=savedW?`이번 주 기록: ${parseFloat(savedW).toFixed(1)} kg`:'이번 주 아직 기록 없음';
+}
+
+function applySkip(meal, skipped) {
+  const wrap = document.getElementById('wrap-'+meal);
+  const btn = document.getElementById('skip-'+meal);
+  if (!wrap || !btn) return;
+  if (skipped) {
+    wrap.classList.add('skipped');
+    btn.classList.add('skipped');
+    btn.textContent = '건너뜀';
+  } else {
+    wrap.classList.remove('skipped');
+    btn.classList.remove('skipped');
+    btn.textContent = '건너뛰기';
+  }
+}
+
+function toggleSkip(meal) {
+  if (!state.meals.skipped) state.meals.skipped = {};
+  state.meals.skipped[meal] = !state.meals.skipped[meal];
+  if (state.meals.skipped[meal]) document.getElementById('m-'+meal).value = '';
+  applySkip(meal, state.meals.skipped[meal]);
+  saveData();
+}
+
+function changeDay(d) { saveData(); cur=new Date(cur); cur.setDate(cur.getDate()+d); load(); render(); }
+
+document.getElementById('fast-start').addEventListener('change', calcFasting);
+document.getElementById('fast-end').addEventListener('change', calcFasting);
+load(); render();
+</script>
+</body>
+</html>
