@@ -54,7 +54,7 @@
   .field-lbl { font-size: 12px; color: var(--text2); }
   .skip-btn { font-size: 11px; padding: 2px 8px; border-radius: 20px; border: 0.5px solid var(--border2); background: transparent; color: var(--text2); cursor: pointer; font-family: inherit; }
   .skip-btn:hover { background: var(--bg2); }
-  .skip-btn.skipped { background: #ffdef8; border-color: #ff2bd2; color: #9c420e; }
+  .skip-btn.skipped { background: #f2f0ff; border-color: #6048fa; color: #3a3940; }
   .meal-wrap.skipped textarea { opacity: 0.35; pointer-events: none; }
   .tinput { width: 100%; border: 0.5px solid var(--border); border-radius: var(--radius-sm); padding: 7px 10px; font-size: 13px; background: var(--bg2); color: var(--text); font-family: inherit; }
   .tinput::placeholder { color: var(--text2); opacity: 0.7; }
@@ -326,7 +326,7 @@ function renderHabitGraph() {
   const avg = Math.round(pcts.reduce((s,p)=>s+p,0)/pcts.length);
   const perfect = pcts.filter(p=>p===100).length;
   document.getElementById('habitStatRow').innerHTML = `
-    <div class="stat-card"><div class="stat-lbl">평균 달성률</div><div class="stat-val" style="color:#1D9E75;">${avg}%</div></div>
+    <div class="stat-card"><div class="stat-lbl">평균 달성률</div><div class="stat-val" style="color:#44489e;">${avg}%</div></div>
     <div class="stat-card"><div class="stat-lbl">100% 달성한 </div><div class="stat-val">${perfect}일</div></div>
     <div class="stat-card"><div class="stat-lbl">최장 연속</div><div class="stat-val">${calcStreak(data)}일</div></div>
   `;
@@ -393,15 +393,15 @@ function renderFastGraph() {
         {
           label: '공복 시간',
           data: hours,
-          backgroundColor: hours.map(h => h >= 14 ? '#ff9a12' : h >= 12 ? '#ffb24a' : h > 0 ? '#fcd095' : 'transparent'),
+          backgroundColor: hours.map(h => h >= 14 ? '#7a5da8' : h >= 12 ? '#b796eb' : h > 0 ? '#d7c0fc' : 'transparent'),
           borderRadius: 4,
           borderSkipped: false
         },
         {
-          label: '16시간 목표',
+          label: '14시간 목표',
           data: Array(data.length).fill(14),
           type: 'line',
-          borderColor: '#fcd719',
+          borderColor: '#569961',
           borderWidth: 1.5,
           borderDash: [4, 3],
           pointRadius: 0,
