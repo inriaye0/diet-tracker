@@ -15,7 +15,7 @@
   }
   @media (prefers-color-scheme: dark) {
     :root {
-      --bg: #1e1e1e; --bg2: #2a2a2a; --bg3: #333333;
+      --bg: #1e1e1e; --bg2: #2a2a2a; --bg3: #b4d9fa;
       --text: #f0f0f0; --text2: #999999; --text3: #555555;
       --border: rgba(255,255,255,0.1); --border2: rgba(255,255,255,0.22);
       --teal-bg: #0a2e22; --teal-dark: #9FE1CB;
@@ -54,7 +54,7 @@
   .field-lbl { font-size: 12px; color: var(--text2); }
   .skip-btn { font-size: 11px; padding: 2px 8px; border-radius: 20px; border: 0.5px solid var(--border2); background: transparent; color: var(--text2); cursor: pointer; font-family: inherit; }
   .skip-btn:hover { background: var(--bg2); }
-  .skip-btn.skipped { background: #FAEEDA; border-color: #BA7517; color: #633806; }
+  .skip-btn.skipped { background: #ffdef8; border-color: #ff2bd2; color: #9c420e; }
   .meal-wrap.skipped textarea { opacity: 0.35; pointer-events: none; }
   .tinput { width: 100%; border: 0.5px solid var(--border); border-radius: var(--radius-sm); padding: 7px 10px; font-size: 13px; background: var(--bg2); color: var(--text); font-family: inherit; }
   .tinput::placeholder { color: var(--text2); opacity: 0.7; }
@@ -245,9 +245,9 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <script>
 const HABITS = [
-  { id: 'exercise', name: '운동하기',    color: '#1D9E75' },
-  { id: 'water',    name: '물 2L 마시기', color: '#378ADD' },
-  { id: 'nosugar',  name: '당류 줄이기',  color: '#BA7517' }
+  { id: 'exercise', name: '간식X',    color: '#1D9E75' },
+  { id: 'lactobacillus',    name: '유산균', color: '#378ADD' },
+  { id: 'stretching',  name: '맨몸/폼롤러 스트레칭',  color: '#BA7517' }
 ];
 const TABS = ['tracker','habits','fasting','weight'];
 let cur = new Date(), state = {};
@@ -376,12 +376,12 @@ function renderFastGraph() {
 
   const avgMins = Math.round(valid.reduce((s,m)=>s+m,0) / valid.length);
   const maxMins = Math.max(...valid);
-  const goalDays = valid.filter(m => m >= 16*60).length;
+  const goalDays = valid.filter(m => m >= 14*60).length;
 
   document.getElementById('fastStatRow').innerHTML = `
     <div class="stat-card"><div class="stat-lbl">평균 공복</div><div class="stat-val" style="color:#534AB7;">${minsToLabel(avgMins)}</div></div>
     <div class="stat-card"><div class="stat-lbl">최장 공복</div><div class="stat-val">${minsToLabel(maxMins)}</div></div>
-    <div class="stat-card"><div class="stat-lbl">16시간 달성</div><div class="stat-val">${goalDays}일</div></div>
+    <div class="stat-card"><div class="stat-lbl">14시간 달성</div><div class="stat-val">${goalDays}일</div></div>
   `;
 
   if (fastChart) fastChart.destroy();
@@ -393,13 +393,13 @@ function renderFastGraph() {
         {
           label: '공복 시간',
           data: hours,
-          backgroundColor: hours.map(h => h >= 16 ? '#7F77DD' : h >= 12 ? '#AFA9EC' : h > 0 ? '#CECBF6' : 'transparent'),
+          backgroundColor: hours.map(h => h >= 14 ? '#ff9a12' : h >= 12 ? '#ffb24a' : h > 0 ? '#fcd095' : 'transparent'),
           borderRadius: 4,
           borderSkipped: false
         },
         {
           label: '16시간 목표',
-          data: Array(data.length).fill(16),
+          data: Array(data.length).fill(14),
           type: 'line',
           borderColor: '#534AB7',
           borderWidth: 1.5,
