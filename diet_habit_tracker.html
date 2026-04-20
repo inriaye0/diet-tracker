@@ -327,7 +327,7 @@ function renderHabitGraph() {
   const perfect = pcts.filter(p=>p===100).length;
   document.getElementById('habitStatRow').innerHTML = `
     <div class="stat-card"><div class="stat-lbl">평균 달성률</div><div class="stat-val" style="color:#1D9E75;">${avg}%</div></div>
-    <div class="stat-card"><div class="stat-lbl">완벽한 날</div><div class="stat-val">${perfect}일</div></div>
+    <div class="stat-card"><div class="stat-lbl">100% 달성한 </div><div class="stat-val">${perfect}일</div></div>
     <div class="stat-card"><div class="stat-lbl">최장 연속</div><div class="stat-val">${calcStreak(data)}일</div></div>
   `;
   document.getElementById('habitBreakdown').innerHTML = HABITS.map(h => {
@@ -379,8 +379,8 @@ function renderFastGraph() {
   const goalDays = valid.filter(m => m >= 14*60).length;
 
   document.getElementById('fastStatRow').innerHTML = `
-    <div class="stat-card"><div class="stat-lbl">평균 공복</div><div class="stat-val" style="color:#534AB7;">${minsToLabel(avgMins)}</div></div>
-    <div class="stat-card"><div class="stat-lbl">최장 공복</div><div class="stat-val">${minsToLabel(maxMins)}</div></div>
+    <div class="stat-card"><div class="stat-lbl">평균 공복 시간</div><div class="stat-val" style="color:#534AB7;">${minsToLabel(avgMins)}</div></div>
+    <div class="stat-card"><div class="stat-lbl">최장 공복 시간</div><div class="stat-val">${minsToLabel(maxMins)}</div></div>
     <div class="stat-card"><div class="stat-lbl">14시간 달성</div><div class="stat-val">${goalDays}일</div></div>
   `;
 
