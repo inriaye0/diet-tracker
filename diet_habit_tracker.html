@@ -379,7 +379,7 @@ function renderFastGraph() {
   const goalDays = valid.filter(m => m >= 14*60).length;
 
   document.getElementById('fastStatRow').innerHTML = `
-    <div class="stat-card"><div class="stat-lbl">평균 공복 시간</div><div class="stat-val" style="color:#534AB7;">${minsToLabel(avgMins)}</div></div>
+    <div class="stat-card"><div class="stat-lbl">평균 공복 시간</div><div class="stat-val" style="color:#a33317;">${minsToLabel(avgMins)}</div></div>
     <div class="stat-card"><div class="stat-lbl">최장 공복 시간</div><div class="stat-val">${minsToLabel(maxMins)}</div></div>
     <div class="stat-card"><div class="stat-lbl">14시간 달성</div><div class="stat-val">${goalDays}일</div></div>
   `;
